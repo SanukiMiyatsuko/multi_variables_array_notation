@@ -1,4 +1,4 @@
-import { AT, PT, T, Z, ONE, LOMEGA, OMEGA, sanitize_plus_term, psi } from "./intersection";
+import { AT, PT, T, Z, sanitize_plus_term, psi, ONE, OMEGA, LOMEGA, IOTA } from "./intersection";
 
 export const headNameReplace = (headname: string): string => {
     switch (headname) {
@@ -6,22 +6,10 @@ export const headNameReplace = (headname: string): string => {
             return "o";
         case "亜":
             return "a";
-        case "伊":
-            return "i";
-        case "胃":
-            return "い";
         case "亞":
             return "A";
-        case "B":
-            return "b";
         case "ψ":
             return "p";
-        case "G":
-            return "g";
-        case "竹":
-            return "t";
-        case "茸":
-            return "k";
         default:
             throw new Error("不明な操作");
     }
@@ -150,26 +138,35 @@ export class Scanner {
             return OMEGA;
         } else if (this.consume("W") || this.consume("Ω")) {
             return LOMEGA;
+        } else if (this.consume("I")) {
+            return IOTA;
         } else {
             this.expect3("ψ", "p", this.headname);
-            this.consume("_");
-            let sub: T;
+            this.consume("_"); // optional "_"
+            const argarr: T[] = [];
             if (this.consume("(")) {
                 const term = this.parse_term();
-                if (this.consume(")")) return psi(Z, term);
-                sub = term;
+                argarr.push(term);
+                if (this.consume(")")) return psi(argarr);
                 this.expect(",");
             } else if (this.consume("{")) {
-                sub = this.parse_term();
+                const term = this.parse_term();
+                argarr.push(term);
                 this.expect("}");
                 this.expect("(");
             } else {
-                sub = this.parse_term();
+                const term = this.parse_term();
+                argarr.push(term);
                 this.expect("(");
             }
             const arg = this.parse_term();
+            argarr.push(arg);
+            while (this.consume(",")) {
+                const term = this.parse_term();
+                argarr.push(term);
+            }
             this.expect(")");
-            return psi(sub, arg);
+            return psi(argarr.reverse());
         }
     }
 }

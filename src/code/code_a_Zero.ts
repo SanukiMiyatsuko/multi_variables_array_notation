@@ -1,72 +1,55 @@
-import { Hyouki, strT, ZT, PT, T, Z, ONE, OMEGA, equal, psi, plus, sanitize_plus_term } from "../intersection";
+import { Hyouki, ZT, PT, T, Z, equal, psi, plus, sanitize_plus_term, ONE, OMEGA } from "../intersection";
 
 export class Zero_Function implements Hyouki {
-    fund(a: T, b: T): strT {
-        const result = fundAndGamma(a, b);
-        return ({
-            term: result.fund,
-            gamma: result.gammat,
-        });
+    fund(a: T, b: T): T {
+        return fund(a, b);
     }
 
-    dom(a: T): strT {
-        const result = dom(a);
-        return ({
-            term: result,
-            gamma: null,
-        });
+    dom(a: T): T {
+        return  dom(a);
     }
 }
 
-// dom(t)
-function dom(s: T): ZT | PT {
-    if (s.type === "zero") {
+function dom(t: T): ZT | PT {
+    if (t.type === "zero") {
         return Z;
-    } else if (s.type === "plus") {
-        return dom(s.add[s.add.length - 1]);
-    } else { // t.type === "psi"
-        if (equal(s, ONE)) return ONE;
+    } else if (t.type === "plus") {
+        return dom(t.add[t.add.length - 1]);
+    } else {
+        if (t.arr.every(x => x.type === "zero")) return ONE;
         return OMEGA;
     }
 }
 
-function fundAndGamma(a: T, b: T) {
-    let bp: T | null = null;
-    // x[y]
-    function fund(s: T, t: T): T {
-        if (s.type === "zero") {
-            return Z;
-        } else if (s.type === "plus") {
-            const lastfund = fund(s.add[s.add.length - 1], t);
-            const remains = sanitize_plus_term(s.add.slice(0, s.add.length - 1));
-            return plus(remains, lastfund);
-        } else {
-            const a = s.sub;
-            const b = s.arg;
-            const domb = dom(b);
-            if (domb.type === "zero") {
-                const doma = dom(s.sub);
-                if (doma.type === "zero") {
-                    return Z;
-                } else if (equal(doma, ONE)) {
-                    if (!bp) bp = psi(fund(a, Z), Z);
-                    if (equal(dom(t), ONE)) return psi(fund(a, Z), fund(s, fund(t, Z)));
-                    return Z;
-                } else {
-                    return psi(fund(a, t), b);
-                }
-            } else if (equal(domb, ONE)) {
-                if (!bp) bp = psi(a, fund(b, Z));
-                if (equal(dom(t), ONE)) return plus(fund(s, fund(t, Z)), psi(a, fund(b, Z)));
-                return Z;
-            } else {
-                return psi(a, fund(b, t));
-            }
+function fund(s: T, t: T): T {
+    if (s.type === "zero") {
+        return Z;
+    } else if (s.type === "plus") {
+        const lastfund = fund(s.add[s.add.length - 1], t);
+        const remains = sanitize_plus_term(s.add.slice(0, -1));
+        return plus(remains, lastfund);
+    } else {
+        let i_0 = 0;
+        while (i_0 < s.arr.length) {
+            if (!equal(s.arr[i_0], Z)) break;
+            i_0++;
         }
+        if (i_0 === s.arr.length) return Z;
+        const alpha = [...s.arr];
+        const domi_0 = dom(alpha[i_0]);
+        if (equal(domi_0, ONE)) {
+            if (equal(dom(t), ONE)) {
+                if (i_0 === 0) {
+                    alpha[0] = fund(s.arr[0], Z);
+                    return plus(fund(s, fund(t, Z)), psi(alpha));
+                }
+                alpha[i_0] = fund(alpha[i_0], Z);
+                alpha[i_0-1] = fund(s, fund(t, Z));
+                return psi(alpha);
+            }
+            return Z;
+        }
+        alpha[i_0] = fund(s.arr[i_0], t);
+        return psi(alpha);
     }
-
-    return ({
-        fund: fund(a, b),
-        gammat: bp,
-    });
 }

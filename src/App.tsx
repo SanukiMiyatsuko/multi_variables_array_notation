@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { Hyouki, strT, less_than, Options, termToString, term_to_string_gamma } from './intersection';
+import { Hyouki, less_than, Options, termToString, variable_length, equalize, T, loose } from './intersection';
 import { switchFunc } from './junction';
 
 type Operation = "fund" | "dom" | "less_than";
@@ -35,42 +35,48 @@ function App() {
       const x = new Scanner(inputA, selected).parse_term();
       const y = inputB ? new Scanner(inputB, selected).parse_term() : null;
 
-      const inputStrx = termToString(x, options, selected);
+      const xLength = variable_length(x);
+      let lambda = y ? Math.max(xLength, variable_length(y)) : xLength;
+
+      const eqx = options.checkOnOffF ? equalize(loose(x), lambda) : loose(x);
+      const eqy = y ? (options.checkOnOffF ? equalize(loose(y), lambda): loose(y)) : null;
+
+      const inputStrx = termToString(eqx, options, selected, lambda);
       let inputStry: string;
       let inputStr: string;
+
       if (operation === "less_than") {
-        if (y === null) throw Error("Bの入力が必要です");
-        inputStry = termToString(y, options, selected);
+        if (eqy === null) throw Error("Bの入力が必要です");
+        inputStry = termToString(eqy, options, selected, lambda);
         inputStr = options.checkOnOffT ? `入力：$${inputStrx} \\lt ${inputStry}$` : `入力：${inputStrx} < ${inputStry}`;
-        setOutput(`${inputStr}\n\n出力：${less_than(x, y) ? "真" : "偽"}`);
+        setOutput(`${inputStr}\n\n出力：${less_than(eqx, eqy) ? "真" : "偽"}`);
         return;
       }
 
       const func: Hyouki = switchFunc(selected);
-      const result: strT = (() => {
+      let result: T = (() => {
         switch (operation) {
           case "fund":
-            if (y === null) throw Error("Bの入力が必要です");
-            inputStry = termToString(y, options, selected);
+            if (eqy === null) throw Error("Bの入力が必要です");
+            inputStry = termToString(eqy, options, selected, lambda);
             inputStr = options.checkOnOffT ? `入力：$${inputStrx}[${inputStry}]$` : `入力：${inputStrx}[${inputStry}]`;
-            return func.fund(x, y);
+            return func.fund(eqx, eqy, lambda);
           case "dom":
             inputStr = options.checkOnOffT ? `入力：$\\textrm{dom}(${inputStrx})$` : `入力：dom(${inputStrx})`;
-            return func.dom(x);
+            return func.dom(eqx, lambda);
           default:
             throw new Error("不明な操作");
         }
       })();
 
-      let strTerm = termToString(result.term, options, selected);
-      strTerm = `\n\n出力：${options.checkOnOffT ? `$${strTerm}$` : strTerm}`;
-      let strGamma = ``;
-      if (result.gamma) {
-        strGamma = term_to_string_gamma(result.gamma, options, selected);
-        strGamma = `\n\nBadpart：${options.checkOnOffT ? `$${strGamma}$` : strGamma}`;
-      }
+      result = loose(result);
+      lambda = variable_length(result);
+      if (options.checkOnOffF) result = equalize(result, lambda);
 
-      setOutput(`${inputStr}${strGamma}${strTerm}`);
+      let strTerm = termToString(result, options, selected, lambda);
+      strTerm = `\n\n出力：${options.checkOnOffT ? `$${strTerm}$` : strTerm}`;
+
+      setOutput(`${inputStr}${strTerm}`);
     } catch (error) {
       if (error instanceof Error) setOutputError(error.message);
       else setOutputError("不明なエラー");
@@ -127,7 +133,6 @@ function App() {
             <select value={selected} onChange={e => setSelected(e.target.value)}>
               <option value="〇">多変数〇関数</option>
               <option value="亜">多変数亜関数</option>
-              <option value="胃">多変数胃関数</option>
               <option value="亞">多変数亞関数</option>
               <option value="ψ">くまくま(大嘘)多変数ψ</option>
             </select>
@@ -150,7 +155,7 @@ function App() {
             </label></li>
             <li><label className="checkbox">
             <input type="checkbox" checked={options.checkOnOffF} onChange={() => handleCheckboxChange('checkOnOffF')} />
-              変数の個数を固定して表示
+              変数の個数を最大数で固定して表示
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffA} onChange={() => handleCheckboxChange('checkOnOffA')} />

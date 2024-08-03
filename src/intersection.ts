@@ -1,12 +1,80 @@
 export type ZT = { readonly type: "zero" };
 export type AT = { readonly type: "plus", readonly add: PT[] };
-export type PT = { readonly type: "psi", readonly sub: T, readonly arg: T };
+export type PT = { readonly type: "psi", readonly arr: T[] };
 export type T = ZT | AT | PT;
 
 export const Z: ZT = { type: "zero" };
-export const ONE: PT = { type: "psi", sub: Z, arg: Z };
-export const OMEGA: PT = { type: "psi", sub: Z, arg: ONE };
-export const LOMEGA: PT = { type: "psi", sub: ONE, arg: Z };
+export const ONE: PT = psi([Z]);
+export const OMEGA: PT = psi([ONE]);
+export const LOMEGA: PT = psi([Z, ONE]);
+export const IOTA: PT = psi([Z, Z, ONE]);
+
+export function variable_length(s: T): number {
+    if (s.type === "zero") {
+        return 1;
+    } else if (s.type === "plus") {
+        const addArray = s.add.map((x) => variable_length(x));
+        return Math.max(...addArray);
+    } else {
+        let sArray = [...s.arr].reverse();
+        while (sArray.length > 1 && sArray[0].type === "zero") sArray = sArray.slice(1);
+        const lengthArray = sArray.map((x) => variable_length(x));
+        return Math.max(...lengthArray, sArray.length);
+    }
+}
+
+function equalize_bool(s: T, n: number): boolean {
+    if (s.type === "zero") {
+        return true;
+    } else if (s.type === "plus") {
+        return s.add.every(x => equalize_bool(x, n));
+    } else {
+        if (s.arr.length !== n) return false;
+        if (s.arr.every((x) => (equal(x, Z)))) return true;
+        return s.arr.every(x => equalize_bool(x, n));
+    }
+}
+
+export function equalize(s: T, n: number): T {
+    if (s.type === "zero") {
+        return Z;
+    } else if (s.type === "plus") {
+        const a = s.add[0];
+        const b = sanitize_plus_term(s.add.slice(1));
+        return plus(equalize(a, n), equalize(b, n));
+    } else {
+        if (s.arr.length === n) {
+            if (!s.arr.every((x) => equalize_bool(x, n))) {
+                return psi(s.arr.map((x) => equalize(x, n)));
+            } else {
+                return psi(s.arr);
+            }
+        } else {
+            if (!s.arr.every((x) => equalize_bool(x, n))) {
+                const sarr = s.arr.map((x) => equalize(x, n));
+                const t = Array(n - s.arr.length).fill(Z);
+                return psi(sarr.concat(t));
+            } else {
+                const t = Array(n - s.arr.length).fill(Z);
+                return psi(s.arr.concat(t));
+            }
+        }
+    }
+}
+
+export function loose(s: T): T {
+    if (s.type === "zero") {
+        return Z;
+    } else if (s.type === "plus") {
+        const a = s.add[0];
+        const b = sanitize_plus_term(s.add.slice(1));
+        return plus(loose(a), loose(b));
+    } else {
+        let t = s.arr.map(x => loose(x));
+        while (t[t.length-1].type === "zero" && t.length > 1) t = t.slice(0, -1);
+        return psi(t);
+    }
+}
 
 // オブジェクトの相等判定
 export function equal(s: T, t: T): boolean {
@@ -14,19 +82,30 @@ export function equal(s: T, t: T): boolean {
         return t.type === "zero";
     } else if (s.type === "plus") {
         if (t.type !== "plus") return false;
-        if (t.add.length !== s.add.length) return false;
+        if (t.add.length < s.add.length) return false;
         for (let i = 0; i < t.add.length; i++) {
             if (!equal(s.add[i], t.add[i])) return false;
         }
         return true;
     } else {
         if (t.type !== "psi") return false;
-        return equal(s.sub, t.sub) && equal(s.arg, t.arg);
+        const sLength = s.arr.length;
+        const tLength = t.arr.length;
+        for (let k = 0; k < tLength; k++) {
+            if (!equal(s.arr[k], t.arr[k])) return false;
+        }
+        if (sLength < tLength) {
+            return t.arr.slice(sLength).every(x => x.type === "zero");
+        }
+        if (sLength > tLength) {
+            return s.arr.slice(tLength).every(x => x.type === "zero");
+        }
+        return true;
     }
 }
 
-export function psi(sub: T, arg: T): PT {
-    return { type: "psi", sub: sub, arg: arg };
+export function psi(arr: T[]): PT {
+    return { type: "psi", arr: [...arr] };
 }
 
 // a+b を適切に整形して返す
@@ -69,8 +148,40 @@ export function less_than(s: T, t: T): boolean {
         if (t.type === "zero") {
             return false;
         } else if (t.type === "psi") {
-            return less_than(s.sub, t.sub) ||
-                (equal(s.sub, t.sub) && less_than(s.arg, t.arg));
+            const sLength = s.arr.length;
+            const tLength = t.arr.length;
+            const sReverse = [...s.arr].reverse();
+            const tReverse = [...t.arr].reverse();
+            if (sLength === tLength) {
+                for (let k = 0; k < tLength; k++) {
+                    if (!equal(sReverse[k], tReverse[k])) return less_than(sReverse[k], tReverse[k]);
+                }
+                return false;
+            } else if (sLength < tLength) {
+                let k = 0;
+                while (k < tLength - sLength) {
+                    if (!equal(tReverse[k], Z)) return true;
+                    k++;
+                }
+                while (k < tLength) {
+                    if (!equal(sReverse[k - tLength + sLength], tReverse[k]))
+                        return less_than(sReverse[k - tLength + sLength], tReverse[k]);
+                    k++;
+                }
+                return false;
+            } else {
+                let k = 0;
+                while (k < sLength - tLength) {
+                    if (!equal(sReverse[k], Z)) return false;
+                    k++;
+                }
+                while (k < sLength) {
+                    if (!equal(sReverse[k], tReverse[k - sLength + tLength]))
+                        return less_than(sReverse[k], tReverse[k - sLength + tLength]);
+                    k++;
+                }
+                return false;
+            }
         } else {
             return equal(s, t.add[0]) || less_than(s, t.add[0]);
         }
@@ -89,14 +200,9 @@ export function less_than(s: T, t: T): boolean {
 }
 
 // ===========================================
-export type strT = {
-    term: T;
-    gamma: T | null;
-}
-
 export interface Hyouki {
-    fund(a: T, b: T): strT;
-    dom(a: T): strT;
+    fund(a: T, b: T, lambda: number): T;
+    dom(a: T, lambda: number): T;
 }
 
 export type Options = {
@@ -116,25 +222,38 @@ function term_to_string(t: T, options: Options, strHead: string): string {
     if (t.type === "zero") {
         return "0";
     } else if (t.type === "psi") {
-        if (!(options.checkOnOffC && t.sub.type === "zero")) {
-            if (options.checkOnOffA) {
-                if (options.checkOnOffB || options.checkOnOffT)
-                    return strHead + "_{" + term_to_string(t.sub, options, strHead) + "}(" + term_to_string(t.arg, options, strHead) + ")";
-                if (t.sub.type === "zero") {
-                    return strHead + "_0(" + term_to_string(t.arg, options, strHead) + ")";
-                } else if (t.sub.type === "plus") {
-                    if (t.sub.add.every((x) => equal(x, ONE)))
-                        return strHead + "_" + term_to_string(t.sub, options, strHead) + "(" + term_to_string(t.arg, options, strHead) + ")";
-                    return strHead + "_{" + term_to_string(t.sub, options, strHead) + "}(" + term_to_string(t.arg, options, strHead) + ")";
+        const tReverse = [...t.arr].reverse();
+        let str = strHead;
+        if (options.checkOnOffA && tReverse.length > 1) {
+            if (options.checkOnOffB || options.checkOnOffT) {
+                str = str + "_{" + term_to_string(tReverse[0], options, strHead) + "}(";
+            } else {
+                if (tReverse[0].type === "zero") {
+                    str = str + "_0(";
+                } else if (tReverse[0].type === "plus") {
+                    if (tReverse[0].add.every((x) => equal(x, ONE))) {
+                        str = str + "_" + term_to_string(tReverse[0], options, strHead) + "(";
+                    } else {
+                        str = str + "_{" + term_to_string(tReverse[0], options, strHead) + "}(";
+                    }
                 } else {
-                    if (equal(t.sub, ONE) || (options.checkOnOffo && equal(t.sub, OMEGA)) || (options.checkOnOffO && equal(t.sub, LOMEGA)))
-                        return strHead + "_" + term_to_string(t.sub, options, strHead) + "(" + term_to_string(t.arg, options, strHead) + ")";
-                    return strHead + "_{" + term_to_string(t.sub, options, strHead) + "}(" + term_to_string(t.arg, options, strHead) + ")";
+                    if (equal(tReverse[0], ONE) || (options.checkOnOffo && equal(tReverse[0], OMEGA)) || (options.checkOnOffO && equal(tReverse[0], LOMEGA)) || (options.checkOnOffI && equal(tReverse[0], IOTA))) {
+                        str = str + "_" + term_to_string(tReverse[0], options, strHead) + "(";
+                    } else {
+                        str = str + "_{" + term_to_string(tReverse[0], options, strHead) + "}(";
+                    }
                 }
             }
-            return strHead + "(" + term_to_string(t.sub, options, strHead) + "," + term_to_string(t.arg, options, strHead) + ")";
+        } else if (tReverse.length === 1) {
+            return str + "(" + term_to_string(tReverse[0], options, strHead) + ")";
+        } else {
+            str = str + "(" + term_to_string(tReverse[0], options, strHead) + ",";
         }
-        return strHead + "(" + term_to_string(t.arg, options, strHead) + ")";
+        str = str + term_to_string(tReverse[1], options, strHead);
+        for (let i = 2; i < tReverse.length; i++) {
+            str = str + "," + term_to_string(tReverse[i], options, strHead);
+        }
+        return str + ")";
     } else {
         return t.add.map((x) => term_to_string(x, options, strHead)).join("+");
     }
@@ -151,22 +270,77 @@ function to_TeX(str: string, options: Options, strHead: string): string {
     return str;
 }
 
-function abbrviate(str: string, options: Options, strHead: string): string {
+function abbrviate(str: string, options: Options, strHead: string, lambda: number): string {
     if (options.checkOnOffp) strHead = "ψ";
-    str = str.replace(RegExp(strHead + "\\(0\\)", "g"), "1");
-    str = str.replace(RegExp(strHead + "_\\{0\\}\\(0\\)", "g"), "1");
-    str = str.replace(RegExp(strHead + "_0\\(0\\)", "g"), "1");
-    str = str.replace(RegExp(strHead + "\\(0,0\\)", "g"), "1");
+    if (lambda === 1) {
+        str = str.replace(RegExp(strHead + "\\(0\\)", "g"), "1");
+    } else if (lambda === 2) {
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0\\)", "g"), "1");
+        str = str.replace(RegExp(strHead + "_0\\(0\\)", "g"), "1");
+        str = str.replace(RegExp(strHead + "\\(0,0\\)", "g"), "1");
+    } else {
+        let zerostr = "";
+        for (let i = 2; i < lambda; i++) {
+            zerostr = zerostr + ",0";
+        }
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + "\\)", "g"), "1");
+        str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + "\\)", "g"), "1");
+        str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + "\\)", "g"), "1");
+    }
     if (options.checkOnOffo) {
-        str = str.replace(RegExp(strHead + "\\(1\\)", "g"), "ω");
-        str = str.replace(RegExp(strHead + "_\\{0\\}\\(1\\)", "g"), "ω");
-        str = str.replace(RegExp(strHead + "_0\\(1\\)", "g"), "ω");
-        str = str.replace(RegExp(strHead + "\\(0,1\\)", "g"), "ω");
+        if (lambda === 1) {
+            str = str.replace(RegExp(strHead + "\\(1\\)", "g"), "ω");
+        } else if (lambda === 2) {
+            str = str.replace(RegExp(strHead + "_\\{0\\}\\(1\\)", "g"), "ω");
+            str = str.replace(RegExp(strHead + "_0\\(1\\)", "g"), "ω");
+            str = str.replace(RegExp(strHead + "\\(0,1\\)", "g"), "ω");
+        } else {
+            let zerostr = "";
+            for (let i = 2; i < lambda - 1; i++) {
+                zerostr = zerostr + ",0";
+            }
+            str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1\\)", "g"), "ω");
+            str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1\\)", "g"), "ω");
+            str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1\\)", "g"), "ω");
+        }
     }
     if (options.checkOnOffO) {
-        str = str.replace(RegExp(strHead + "_\\{1\\}\\(0\\)", "g"), "Ω");
-        str = str.replace(RegExp(strHead + "_1\\(0\\)", "g"), "Ω");
-        str = str.replace(RegExp(strHead + "\\(1,0\\)", "g"), "Ω");
+        if (lambda === 2) {
+            str = str.replace(RegExp(strHead + "_\\{1\\}\\(0\\)", "g"), "Ω");
+            str = str.replace(RegExp(strHead + "_1\\(0\\)", "g"), "Ω");
+            str = str.replace(RegExp(strHead + "\\(1,0\\)", "g"), "Ω");
+        } else if (lambda === 3) {
+            str = str.replace(RegExp(strHead + "_\\{0\\}\\(1,0\\)", "g"), "Ω");
+            str = str.replace(RegExp(strHead + "_0\\(1,0\\)", "g"), "Ω");
+            str = str.replace(RegExp(strHead + "\\(0,1,0\\)", "g"), "Ω");
+        } else {
+            let zerostr = "";
+            for (let i = 2; i < lambda - 2; i++) {
+                zerostr = zerostr + ",0";
+            }
+            str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1,0\\)", "g"), "Ω");
+            str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1,0\\)", "g"), "Ω");
+            str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1,0\\)", "g"), "Ω");
+        }
+    }
+    if (options.checkOnOffI) {
+        if (lambda === 3) {
+            str = str.replace(RegExp(strHead + "_\\{1\\}\\(0,0\\)", "g"), "I");
+            str = str.replace(RegExp(strHead + "_1\\(0,0\\)", "g"), "I");
+            str = str.replace(RegExp(strHead + "\\(1,0,0\\)", "g"), "I");
+        } else if (lambda === 4) {
+            str = str.replace(RegExp(strHead + "_\\{0\\}\\(1,0,0\\)", "g"), "I");
+            str = str.replace(RegExp(strHead + "_0\\(1,0,0\\)", "g"), "I");
+            str = str.replace(RegExp(strHead + "\\(0,1,0,0\\)", "g"), "I");
+        } else {
+            let zerostr = "";
+            for (let i = 2; i < lambda - 3; i++) {
+                zerostr = zerostr + ",0";
+            }
+            str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1,0,0\\)", "g"), "I");
+            str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1,0,0\\)", "g"), "I");
+            str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1,0,0\\)", "g"), "I");
+        }
     }
     if (options.checkOnOffT) str = to_TeX(str, options, strHead);
     // eslint-disable-next-line no-constant-condition
@@ -181,76 +355,6 @@ function abbrviate(str: string, options: Options, strHead: string): string {
     return str;
 }
 
-export function termToString(t: T, options: Options, strHead: string): string {
-    return abbrviate(term_to_string(t, options, strHead), options, strHead);
-}
-
-export function term_to_string_gamma(t: T, options: Options, strHead: string): string {
-    if (options.checkOnOffp) strHead = "ψ";
-    if (t.type === "zero") {
-        return "0";
-    } else if (t.type === "psi") {
-        let str = strHead;
-        if (options.checkOnOffT) {
-            str = `\\textrm{${strHead}}`;
-            if (strHead === "ψ") {
-                str = `\\psi`;
-            }
-        }
-        if (!(options.checkOnOffC && t.sub.type === "zero")) {
-            if (options.checkOnOffA) {
-                if (options.checkOnOffB || options.checkOnOffT) {
-                    if (t.sub.type === "zero") {
-                        return str + "_{0}(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                    } else if (t.sub.type === "plus") {
-                        return str + "_{" + stringAbbrviate(t.sub, options, strHead) + "}(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                    } else {
-                        return str + "_{" + matchAndReplaceOmegas(t.sub, options, strHead) + "}(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                    }
-                }
-                if (t.sub.type === "zero") {
-                    return str + "_0(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                } else if (t.sub.type === "plus") {
-                    if (t.sub.add.every(x => equal(x, ONE)))
-                        return str + "_" + t.sub.add.length + "(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                    return str + "_{" + stringAbbrviate(t.sub, options, strHead) + "}(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                } else {
-                    if (equal(t.sub, ONE) || (options.checkOnOffo && equal(t.sub, OMEGA)) || (options.checkOnOffO && equal(t.sub, LOMEGA)))
-                        return str + "_" + matchAndReplaceOmegas(t.sub, options, strHead) + "(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                    return str + "_{" + matchAndReplaceOmegas(t.sub, options, strHead) + "}(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-                }
-            }
-            if (t.sub.type === "zero") {
-                return str + "(0," + term_to_string_gamma(t.arg, options, strHead) + ")";
-            }  else if (t.sub.type === "plus") {
-                return str + "(" + stringAbbrviate(t.sub, options, strHead) + "," + term_to_string_gamma(t.arg, options, strHead) + ")";
-            } else {
-                return str + "(" + matchAndReplaceOmegas(t.sub, options, strHead) + "," + term_to_string_gamma(t.arg, options, strHead) + ")";
-            }
-        }
-        return str + "(" + term_to_string_gamma(t.arg, options, strHead) + ")";
-    } else {
-        return t.add.map((x) => term_to_string_gamma(x, options, strHead)).join("+");
-    }
-}
-
-function matchAndReplaceOmegas(s: PT, options: Options, strHead: string): string {
-    if (equal(s, ONE)) return `1`;
-    if (options.checkOnOffo && equal(s, OMEGA)) return options.checkOnOffT ? `\\omega` : `ω`;
-    if (options.checkOnOffO && equal(s, LOMEGA)) return options.checkOnOffT ? `\\Omega` : `Ω`;
-    return term_to_string_gamma(s, options, strHead);
-}
-
-function stringAbbrviate(s: AT, options: Options, strHead: string): string {
-    let str = s.add.map(x => matchAndReplaceOmegas(x, options, strHead)).join("+");
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        const numterm = str.match(/1(\+1)+/);
-        if (!numterm) break;
-        const matches = numterm[0].match(/1/g);
-        if (!matches) throw Error("そんなことある？");
-        const count = matches.length;
-        str = str.replace(numterm[0], count.toString());
-    }
-    return str;
+export function termToString(t: T, options: Options, strHead: string, lambda: number): string {
+    return abbrviate(term_to_string(t, options, strHead), options, strHead, lambda);
 }

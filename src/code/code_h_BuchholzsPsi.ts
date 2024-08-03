@@ -1,90 +1,84 @@
-import { Hyouki, strT, ZT, PT, T, Z, ONE, OMEGA, equal, psi, plus, sanitize_plus_term, less_than } from "../intersection";
+import { Hyouki, ZT, PT, T, Z, equal, psi, plus, sanitize_plus_term, less_than, ONE, OMEGA } from "../intersection";
 
 export class Buchholzs_Psi_Function implements Hyouki {
-    fund(a: T, b: T): strT {
-        const result = fundAndGamma(a, b);
-        return ({
-            term: result.fund,
-            gamma: result.gammat,
-        });
+    fund(a: T, b: T): T {
+        return fund(a, b);
     }
 
-    dom(a: T): strT {
-        const result = dom(a);
-        return ({
-            term: result,
-            gamma: null,
-        });
+    dom(a: T): T {
+        return  dom(a);
     }
 }
 
-// dom(t)
-function dom(s: T): ZT | PT {
+function dom(t: T): ZT | PT {
+    if (t.type === "zero") {
+        return Z;
+    } else if (t.type === "plus") {
+        return dom(t.add[t.add.length - 1]);
+    } else {
+        let i_0 = 0;
+        while (i_0 < t.arr.length) {
+            if (!equal(t.arr[i_0], Z)) break;
+            i_0++;
+        }
+        if (i_0 === t.arr.length) return ONE;
+        const domi_0 = dom(t.arr[i_0]);
+        if (equal(domi_0, ONE)) {
+            if (i_0 === 0) return OMEGA;
+            return t;
+        }
+        if (less_than(domi_0, t)) return domi_0;
+        return OMEGA;
+    }
+}
+
+function fund(s: T, t: T): T {
     if (s.type === "zero") {
         return Z;
     } else if (s.type === "plus") {
-        return dom(s.add[s.add.length - 1]);
-    } else { // t.type === "psi"
-        const domb = dom(s.arg);
-        if (domb.type === "zero") {
-            const doma = dom(s.sub);
-            if (doma.type === "zero" || equal(doma, ONE)) return s;
-            return doma;
-        } else if (equal(domb, ONE)) {
-            return OMEGA;
-        } else {
-            if (less_than(domb, s)) return domb;
-            return OMEGA;
+        const lastfund = fund(s.add[s.add.length - 1], t);
+        const remains = sanitize_plus_term(s.add.slice(0, -1));
+        return plus(remains, lastfund);
+    } else {
+        let i_0 = 0;
+        while (i_0 < s.arr.length) {
+            if (!equal(s.arr[i_0], Z)) break;
+            i_0++;
         }
-    }
-}
-
-function fundAndGamma(a: T, b: T) {
-    let bp: T | null = null;
-    // x[y]
-    function fund(s: T, t: T): T {
-        if (s.type === "zero") {
+        if (i_0 === s.arr.length) return Z;
+        const alpha = [...s.arr];
+        const domi_0 = dom(alpha[i_0]);
+        if (equal(domi_0, ONE)) {
+            if (i_0 > 0) return t;
+            if (equal(dom(t), ONE)) {
+                alpha[0] = fund(s.arr[0], Z);
+                return plus(fund(s, fund(t, Z)), psi(alpha));
+            }
             return Z;
-        } else if (s.type === "plus") {
-            const lastfund = fund(s.add[s.add.length - 1], t);
-            const remains = sanitize_plus_term(s.add.slice(0, s.add.length - 1));
-            return plus(remains, lastfund);
+        }
+        if (less_than(domi_0, s)) {
+            alpha[i_0] = fund(alpha[i_0], t);
+            return psi(alpha);
         } else {
-            const a = s.sub;
-            const b = s.arg;
-            const domb = dom(b);
-            if (domb.type === "zero") {
-                const doma = dom(s.sub);
-                if (doma.type === "zero" || equal(doma, ONE)) return t;
-                return psi(fund(a, t), b);
-            } else if (equal(domb, ONE)) {
-                if (!bp) bp = psi(a, fund(b, Z));
-                if (equal(dom(t), ONE)) {
-                    return plus(fund(s, fund(t, Z)), psi(a, fund(b, Z)));
-                } else {
-                    return Z;
-                }
+            if (domi_0.type !== "psi") throw Error("なんでだよ");
+            let j_0 = 1;
+            while (j_0 < domi_0.arr.length) {
+                if (!equal(domi_0.arr[j_0], Z)) break;
+                j_0++;
+            }
+            if (equal(dom(t), ONE)) {
+                const p = fund(s, fund(t, Z));
+                if (p.type !== "psi") throw Error("なんでだよ");
+                const Gamma = p.arr[i_0];
+                const beta = [...domi_0.arr];
+                beta[j_0] = fund(beta[j_0], Z);
+                beta[j_0 - 1] = Gamma;
+                alpha[i_0] = fund(alpha[i_0], psi(beta));
+                return psi(alpha);
             } else {
-                if (less_than(domb, s)) {
-                    return psi(a, fund(b, t));
-                } else {
-                    const c = domb.sub;
-                    if (!bp) bp = psi(fund(c, Z), fund(b, Z));
-                    if (equal(dom(t), ONE)) {
-                        const p = fund(s, fund(t, Z));
-                        if (p.type !== "psi") throw Error("pの型がpsiではない");
-                        const gamma = p.arg;
-                        return psi(a, fund(b, psi(fund(c, Z), gamma)));
-                    } else {
-                        return psi(a, fund(b, Z));
-                    }
-                }
+                alpha[i_0] = fund(alpha[i_0], Z);
+                return psi(alpha);
             }
         }
     }
-
-    return ({
-        fund: fund(a, b),
-        gammat: bp,
-    });
 }
