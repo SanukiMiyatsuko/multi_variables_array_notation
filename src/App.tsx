@@ -204,7 +204,7 @@ function App() {
         <a href="https://googology.fandom.com/ja/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%83%96%E3%83%AD%E3%82%B0:Mitsuki1729/%E8%A9%A6%E4%BD%9C:%E3%81%8F%E3%81%BE%E3%81%8F%E3%81%BE(%E5%A4%A7%E5%98%98)%E5%A4%9A%E5%A4%89%E6%95%B0%CE%A8" target="_blank" rel="noreferrer">Definition of "Kumakuma (Ohuso) Multi Variables ψ Function"</a> by <a href="https://googology.fandom.com/ja/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC:Mitsuki1729" target="_blank" rel="noreferrer">Mitsuki1729</a>, Retrieved 2024/08/03 <br />
         <a href="https://googology.fandom.com/ja/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%83%96%E3%83%AD%E3%82%B0:%E7%AB%B9%E5%8F%96%E7%BF%81/%E3%83%96%E3%83%AD%E3%82%B0%E8%A8%98%E4%BA%8B%E3%81%BE%E3%81%A8%E3%82%81" target="_blank" rel="noreferrer">Definition of other functions</a> by <a href="https://googology.fandom.com/ja/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC:%E7%AB%B9%E5%8F%96%E7%BF%81" target="_blank" rel="noreferrer">竹取翁</a>, Retrieved 2024/08/03 <br />
         The program <a href="https://github.com/SanukiMiyatsuko/multi_variables_array_notation" target="_blank" rel="noreferrer">https://github.com/SanukiMiyatsuko/multi_variables_array_notation</a> is licensed by <a href="https://creativecommons.org/licenses/by-sa/3.0/legalcode" target="_blank" rel="noreferrer">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.<br />
-        Last updated: 2024/08/03
+        Last updated: 2024/08/04
       </footer>
     </div>
   );
