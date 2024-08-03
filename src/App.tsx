@@ -13,7 +13,7 @@ type Operation = "fund" | "dom" | "less_than";
 function App() {
   const [inputA, setInputA] = useState("");
   const [inputB, setInputB] = useState("");
-  const [selected, setSelected] = useState("G");
+  const [selected, setSelected] = useState("亜");
   const [output, setOutput] = useState("入力：\n\n出力：");
   const [outputError, setOutputError] = useState("");
   const [options, setOptions] = useState<Options>({
