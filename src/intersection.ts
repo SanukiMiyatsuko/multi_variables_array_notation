@@ -272,75 +272,59 @@ function to_TeX(str: string, options: Options, strHead: string): string {
 
 function abbrviate(str: string, options: Options, strHead: string, lambda: number): string {
     if (options.checkOnOffp) strHead = "ψ";
-    if (lambda === 1) {
-        str = str.replace(RegExp(strHead + "\\(0\\)", "g"), "1");
-    } else if (lambda === 2) {
-        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0\\)", "g"), "1");
-        str = str.replace(RegExp(strHead + "_0\\(0\\)", "g"), "1");
-        str = str.replace(RegExp(strHead + "\\(0,0\\)", "g"), "1");
-    } else {
+    str = str.replace(RegExp(strHead + "\\(0\\)", "g"), "1");
+    str = str.replace(RegExp(strHead + "_\\{0\\}\\(0\\)", "g"), "1");
+    str = str.replace(RegExp(strHead + "_0\\(0\\)", "g"), "1");
+    str = str.replace(RegExp(strHead + "\\(0,0\\)", "g"), "1");
+    let zerostr = "";
+    for (let i = 2; i < lambda; i++) {
+        zerostr = zerostr + ",0";
+    }
+    str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + "\\)", "g"), "1");
+    str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + "\\)", "g"), "1");
+    str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + "\\)", "g"), "1");
+    if (options.checkOnOffo) {
+        str = str.replace(RegExp(strHead + "\\(1\\)", "g"), "ω");
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(1\\)", "g"), "ω");
+        str = str.replace(RegExp(strHead + "_0\\(1\\)", "g"), "ω");
+        str = str.replace(RegExp(strHead + "\\(0,1\\)", "g"), "ω");
         let zerostr = "";
-        for (let i = 2; i < lambda; i++) {
+        for (let i = 2; i < lambda - 1; i++) {
             zerostr = zerostr + ",0";
         }
-        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + "\\)", "g"), "1");
-        str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + "\\)", "g"), "1");
-        str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + "\\)", "g"), "1");
-    }
-    if (options.checkOnOffo) {
-        if (lambda === 1) {
-            str = str.replace(RegExp(strHead + "\\(1\\)", "g"), "ω");
-        } else if (lambda === 2) {
-            str = str.replace(RegExp(strHead + "_\\{0\\}\\(1\\)", "g"), "ω");
-            str = str.replace(RegExp(strHead + "_0\\(1\\)", "g"), "ω");
-            str = str.replace(RegExp(strHead + "\\(0,1\\)", "g"), "ω");
-        } else {
-            let zerostr = "";
-            for (let i = 2; i < lambda - 1; i++) {
-                zerostr = zerostr + ",0";
-            }
-            str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1\\)", "g"), "ω");
-            str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1\\)", "g"), "ω");
-            str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1\\)", "g"), "ω");
-        }
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1\\)", "g"), "ω");
+        str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1\\)", "g"), "ω");
+        str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1\\)", "g"), "ω");
     }
     if (options.checkOnOffO) {
-        if (lambda === 2) {
-            str = str.replace(RegExp(strHead + "_\\{1\\}\\(0\\)", "g"), "Ω");
-            str = str.replace(RegExp(strHead + "_1\\(0\\)", "g"), "Ω");
-            str = str.replace(RegExp(strHead + "\\(1,0\\)", "g"), "Ω");
-        } else if (lambda === 3) {
-            str = str.replace(RegExp(strHead + "_\\{0\\}\\(1,0\\)", "g"), "Ω");
-            str = str.replace(RegExp(strHead + "_0\\(1,0\\)", "g"), "Ω");
-            str = str.replace(RegExp(strHead + "\\(0,1,0\\)", "g"), "Ω");
-        } else {
-            let zerostr = "";
-            for (let i = 2; i < lambda - 2; i++) {
-                zerostr = zerostr + ",0";
-            }
-            str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1,0\\)", "g"), "Ω");
-            str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1,0\\)", "g"), "Ω");
-            str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1,0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "_\\{1\\}\\(0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "_1\\(0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "\\(1,0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(1,0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "_0\\(1,0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "\\(0,1,0\\)", "g"), "Ω");
+        let zerostr = "";
+        for (let i = 2; i < lambda - 2; i++) {
+            zerostr = zerostr + ",0";
         }
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1,0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1,0\\)", "g"), "Ω");
+        str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1,0\\)", "g"), "Ω");
     }
     if (options.checkOnOffI) {
-        if (lambda === 3) {
-            str = str.replace(RegExp(strHead + "_\\{1\\}\\(0,0\\)", "g"), "I");
-            str = str.replace(RegExp(strHead + "_1\\(0,0\\)", "g"), "I");
-            str = str.replace(RegExp(strHead + "\\(1,0,0\\)", "g"), "I");
-        } else if (lambda === 4) {
-            str = str.replace(RegExp(strHead + "_\\{0\\}\\(1,0,0\\)", "g"), "I");
-            str = str.replace(RegExp(strHead + "_0\\(1,0,0\\)", "g"), "I");
-            str = str.replace(RegExp(strHead + "\\(0,1,0,0\\)", "g"), "I");
-        } else {
-            let zerostr = "";
-            for (let i = 2; i < lambda - 3; i++) {
-                zerostr = zerostr + ",0";
-            }
-            str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1,0,0\\)", "g"), "I");
-            str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1,0,0\\)", "g"), "I");
-            str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1,0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "_\\{1\\}\\(0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "_1\\(0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "\\(1,0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(1,0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "_0\\(1,0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "\\(0,1,0,0\\)", "g"), "I");
+        let zerostr = "";
+        for (let i = 2; i < lambda - 3; i++) {
+            zerostr = zerostr + ",0";
         }
+        str = str.replace(RegExp(strHead + "_\\{0\\}\\(0" + zerostr + ",1,0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "_0\\(0" + zerostr + ",1,0,0\\)", "g"), "I");
+        str = str.replace(RegExp(strHead + "\\(0,0" + zerostr + ",1,0,0\\)", "g"), "I");
     }
     if (options.checkOnOffT) str = to_TeX(str, options, strHead);
     // eslint-disable-next-line no-constant-condition
