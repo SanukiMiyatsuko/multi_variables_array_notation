@@ -16,6 +16,7 @@ function App() {
   const [selected, setSelected] = useState("亜");
   const [output, setOutput] = useState("入力：\n\n出力：");
   const [outputError, setOutputError] = useState("");
+  const [showHide, setShowHide] = useState(false);
   const [options, setOptions] = useState<Options>({
     checkOnOffo: false,
     checkOnOffO: false,
@@ -26,30 +27,34 @@ function App() {
     checkOnOffp: false,
     checkOnOffT: false,
   });
-  const [showHide, setShowHide] = useState(false);
 
   const compute = (operation: Operation) => {
     setOutput("");
     setOutputError("");
     try {
-      const x = new Scanner(inputA, selected).parse_term();
-      const y = inputB ? new Scanner(inputB, selected).parse_term() : null;
+      let x = inputA ? new Scanner(inputA, selected).parse_term() : null;
+      if (x === null) throw Error("Aの入力が必要です");
+      let y = inputB ? new Scanner(inputB, selected).parse_term() : null;
 
+      x = loose(x);
       const xLength = variable_length(x);
-      let lambda = y ? Math.max(xLength, variable_length(y)) : xLength;
+      let lambda = xLength;
+      if (y) {
+        y = loose(y);
+        lambda = Math.max(xLength, variable_length(y));
+        if (options.checkOnOffF) y = equalize(y, lambda);
+      }
 
-      const eqx = options.checkOnOffF ? equalize(loose(x), lambda) : loose(x);
-      const eqy = y ? (options.checkOnOffF ? equalize(loose(y), lambda): loose(y)) : null;
-
-      const inputStrx = termToString(eqx, options, selected, lambda);
+      if (options.checkOnOffF) x = equalize(x, lambda);
+      const inputStrx = termToString(x, options, selected, lambda);
       let inputStry: string;
       let inputStr: string;
 
       if (operation === "less_than") {
-        if (eqy === null) throw Error("Bの入力が必要です");
-        inputStry = termToString(eqy, options, selected, lambda);
+        if (!y) throw Error("Bの入力が必要です");
+        inputStry = termToString(y, options, selected, lambda);
         inputStr = options.checkOnOffT ? `入力：$${inputStrx} \\lt ${inputStry}$` : `入力：${inputStrx} < ${inputStry}`;
-        setOutput(`${inputStr}\n\n出力：${less_than(eqx, eqy) ? "真" : "偽"}`);
+        setOutput(`${inputStr}\n\n出力：${less_than(x, y) ? "真" : "偽"}`);
         return;
       }
 
@@ -57,13 +62,13 @@ function App() {
       let result: T = (() => {
         switch (operation) {
           case "fund":
-            if (eqy === null) throw Error("Bの入力が必要です");
-            inputStry = termToString(eqy, options, selected, lambda);
+            if (!y) throw Error("Bの入力が必要です");
+            inputStry = termToString(y, options, selected, lambda);
             inputStr = options.checkOnOffT ? `入力：$${inputStrx}[${inputStry}]$` : `入力：${inputStrx}[${inputStry}]`;
-            return func.fund(eqx, eqy, lambda);
+            return func.fund(x, y, lambda);
           case "dom":
             inputStr = options.checkOnOffT ? `入力：$\\textrm{dom}(${inputStrx})$` : `入力：dom(${inputStrx})`;
-            return func.dom(eqx, lambda);
+            return func.dom(x, lambda);
           default:
             throw new Error("不明な操作");
         }

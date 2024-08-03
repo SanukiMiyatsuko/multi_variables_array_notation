@@ -16,10 +16,8 @@ export function variable_length(s: T): number {
         const addArray = s.add.map((x) => variable_length(x));
         return Math.max(...addArray);
     } else {
-        let sArray = [...s.arr].reverse();
-        while (sArray.length > 1 && sArray[0].type === "zero") sArray = sArray.slice(1);
-        const lengthArray = sArray.map((x) => variable_length(x));
-        return Math.max(...lengthArray, sArray.length);
+        const lengthArray = [...s.arr].reverse().map((x) => variable_length(x));
+        return Math.max(...lengthArray, lengthArray.length);
     }
 }
 
