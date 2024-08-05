@@ -56,7 +56,6 @@ function fund(s: T, t: T, code: string): T {
                     return plus(fund(s, fund(t, Z, code), code), psi(alpha));
                 }
                 alpha[i_0 - 1] = fund(s, fund(t, Z, code), code);
-                console.log(psi(alpha));
                 return psi(alpha);
             }
             return Z;
