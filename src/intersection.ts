@@ -69,7 +69,7 @@ export function loose(s: T): T {
         return plus(loose(a), loose(b));
     } else {
         let t = s.arr.map(x => loose(x));
-        while (t[t.length-1].type === "zero" && t.length > 1) t = t.slice(0, -1);
+        while (t[t.length - 1].type === "zero" && t.length > 1) t = t.slice(0, -1);
         return psi(t);
     }
 }
