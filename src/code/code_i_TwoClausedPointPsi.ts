@@ -9,7 +9,7 @@ export class Two_Claused_Point_Psi_Function implements Hyouki {
         return dom(a, code);
     }
 }
-
+//
 function dom(t: T, code: string): ZT | PT {
     if (t.type === "zero") {
         return Z;
