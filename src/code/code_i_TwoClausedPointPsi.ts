@@ -9,7 +9,7 @@ export class Two_Claused_Point_Psi_Function implements Hyouki {
         return dom(a, code);
     }
 }
-//
+
 function dom(t: T, code: string): ZT | PT {
     if (t.type === "zero") {
         return Z;
@@ -56,12 +56,10 @@ function fund(s: T, t: T, code: string): T {
                     return plus(fund(s, fund(t, Z, code), code), psi(alpha));
                 }
                 alpha[i_0 - 1] = fund(s, fund(t, Z, code), code);
+                console.log(psi(alpha));
                 return psi(alpha);
             }
             return Z;
-        }
-        if (equal(domi_0, OMEGA)) {
-            alpha[i_0] = fund(alpha[i_0], t, code);
         }
         if (less_than(domi_0, s)) {
             alpha[i_0] = fund(alpha[i_0], t, code);
