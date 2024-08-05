@@ -6,7 +6,7 @@ export class Subspecies_Function implements Hyouki {
     }
 
     dom(a: T): T {
-        return  dom(a);
+        return dom(a);
     }
 }
 

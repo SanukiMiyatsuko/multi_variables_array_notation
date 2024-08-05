@@ -44,10 +44,11 @@ export class Scanner {
     str: string;
     pos: number;
     headname: string;
-    constructor(str: string, headname: string) {
+    constructor(str: string, selected: string) {
         this.str = str.replace(/\s/g, ""); // 空白は無視
         this.pos = 0;
-        this.headname = headname;
+        this.headname = selected;
+        if (selected === "C") this.headname = "ψ";
     }
 
     // 次の文字が期待した文字なら1文字進め、trueを返す。

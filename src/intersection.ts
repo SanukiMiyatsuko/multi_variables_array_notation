@@ -89,7 +89,7 @@ export function equal(s: T, t: T): boolean {
         if (t.type !== "psi") return false;
         const sLength = s.arr.length;
         const tLength = t.arr.length;
-        for (let k = 0; k < tLength; k++) {
+        for (let k = 0; k < Math.min(sLength, tLength); k++) {
             if (!equal(s.arr[k], t.arr[k])) return false;
         }
         if (sLength < tLength) {
@@ -199,8 +199,8 @@ export function less_than(s: T, t: T): boolean {
 
 // ===========================================
 export interface Hyouki {
-    fund(a: T, b: T, lambda: number): T;
-    dom(a: T, lambda: number): T;
+    fund(a: T, b: T, code: string): T;
+    dom(a: T, code: string): T;
 }
 
 export type Options = {
@@ -338,5 +338,7 @@ function abbrviate(str: string, options: Options, strHead: string, lambda: numbe
 }
 
 export function termToString(t: T, options: Options, strHead: string, lambda: number): string {
-    return abbrviate(term_to_string(t, options, strHead), options, strHead, lambda);
+    let headname = strHead;
+    if (strHead === "C") headname = "ψ";
+    return abbrviate(term_to_string(t, options, headname), options, headname, lambda);
 }
