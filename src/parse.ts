@@ -59,6 +59,16 @@ export class Scanner {
         return true;
     }
 
+    consumeStrHead(head: string): boolean {
+        const ch = this.str[this.pos];
+        let op1 = head;
+        if (head === "C" || head === "M") op1 = "ψ"
+        const op2 = headNameReplace(op1);
+        if (ch !== "ψ" && ch !== "p" && ch !== op1 && ch !== op2) return false;
+        this.pos += 1;
+        return true;
+    }
+
     // 次の文字が期待した文字なら1文字進める。
     // 次の文字が期待した文字でないなら例外を投げる。
     expect(op: string): void {
@@ -69,20 +79,6 @@ export class Scanner {
             );
         if (ch !== op)
             throw Error(`${this.pos + 1}文字目に${op}が期待されていましたが、${ch}が見つかりました`);
-        this.pos += 1;
-    }
-
-    expect3(op1: string, op2: string, head: string): void {
-        const ch = this.str[this.pos];
-        let op3 = head;
-        if (head === "C" || head === "M") op3 = "ψ"
-        const op4 = headNameReplace(op3);
-        if (ch === undefined)
-            throw Error(
-                `${this.pos + 1}文字目に、文字がありません`,
-            );
-        if (ch !== op1 && ch !== op2 && ch !== op3 && ch !== op4)
-            throw Error(`${this.pos + 1}文字目に${op1}または${op2}または${op3}または${op4}が期待されていましたが、${ch}が見つかりました`);
         this.pos += 1;
     }
 
@@ -144,23 +140,44 @@ export class Scanner {
         } else if (this.consume("I")) {
             return IOTA;
         } else {
-            this.expect3("ψ", "p", this.headname);
-            this.consume("_"); // optional "_"
             const argarr: T[] = [];
-            if (this.consume("(")) {
-                const term = this.parse_term();
-                argarr.push(term);
-                if (this.consume(")")) return psi(argarr);
-                this.expect(",");
-            } else if (this.consume("{")) {
-                const term = this.parse_term();
-                argarr.push(term);
-                this.expect("}");
-                this.expect("(");
+            if (!this.consumeStrHead(this.headname)) {
+                if (this.consume("(")) {
+                    const term = this.parse_term();
+                    argarr.push(term);
+                    if (this.consume(")")) return psi(argarr);
+                    this.expect(",");
+                } else {
+                    this.consume("_");
+                    if (this.consume("{")) {
+                        const term = this.parse_term();
+                        argarr.push(term);
+                        this.expect("}");
+                        this.expect("(");
+                    } else {
+                        const term = this.parse_term();
+                        argarr.push(term);
+                        this.expect("(");
+                    }
+                }
             } else {
-                const term = this.parse_term();
-                argarr.push(term);
-                this.expect("(");
+                if (this.consume("(")) {
+                    const term = this.parse_term();
+                    argarr.push(term);
+                    if (this.consume(")")) return psi(argarr);
+                    this.expect(",");
+                } else {
+                    if (this.consume("{")) {
+                        const term = this.parse_term();
+                        argarr.push(term);
+                        this.expect("}");
+                        this.expect("(");
+                    } else {
+                        const term = this.parse_term();
+                        argarr.push(term);
+                        this.expect("(");
+                    }
+                }
             }
             const arg = this.parse_term();
             argarr.push(arg);
