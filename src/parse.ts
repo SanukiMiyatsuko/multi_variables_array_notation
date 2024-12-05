@@ -59,9 +59,14 @@ export class Scanner {
         return true;
     }
 
-    consumeStrHead(): boolean {
+    expectStrHead(): boolean {
         const ch = this.str[this.pos];
-        if (ch !== "ψ" && ch !== "p" && ch !== this.headname && ch !== headNameReplace(this.headname)) return false;
+        if (ch === undefined)
+            throw Error(
+                `${this.pos + 1}文字目にψなどの先頭文字が期待されていましたが、これ以上文字がありません`,
+            );
+        if (ch !== "ψ" && ch !== "p" && ch !== this.headname && ch !== headNameReplace(this.headname))
+            throw Error(`${this.pos + 1}文字目にψなどの先頭文字が期待されていましたが、${ch}が見つかりました`);
         this.pos += 1;
         return true;
     }
@@ -137,43 +142,24 @@ export class Scanner {
         } else if (this.consume("I")) {
             return IOTA;
         } else {
+            this.expectStrHead()
             const argarr: T[] = [];
-            if (!this.consumeStrHead()) {
-                if (this.consume("(")) {
-                    const term = this.parse_term();
-                    argarr.push(term);
-                    if (this.consume(")")) return psi(argarr);
-                    this.expect(",");
-                } else {
-                    this.consume("_");
-                    if (this.consume("{")) {
-                        const term = this.parse_term();
-                        argarr.push(term);
-                        this.expect("}");
-                        this.expect("(");
-                    } else {
-                        const term = this.parse_term();
-                        argarr.push(term);
-                        this.expect("(");
-                    }
-                }
+            if (this.consume("(")) {
+                const term = this.parse_term();
+                argarr.push(term);
+                if (this.consume(")")) return psi(argarr);
+                this.expect(",");
             } else {
-                if (this.consume("(")) {
+                this.consume("_");
+                if (this.consume("{")) {
                     const term = this.parse_term();
                     argarr.push(term);
-                    if (this.consume(")")) return psi(argarr);
-                    this.expect(",");
+                    this.expect("}");
+                    this.expect("(");
                 } else {
-                    if (this.consume("{")) {
-                        const term = this.parse_term();
-                        argarr.push(term);
-                        this.expect("}");
-                        this.expect("(");
-                    } else {
-                        const term = this.parse_term();
-                        argarr.push(term);
-                        this.expect("(");
-                    }
+                    const term = this.parse_term();
+                    argarr.push(term);
+                    this.expect("(");
                 }
             }
             const arg = this.parse_term();
