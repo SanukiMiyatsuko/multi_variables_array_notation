@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { less_than, variable_length, equalize, T, loose } from "./intersection";
+import { less_than, variable_length, T, loose } from "./intersection";
 import { Hyouki, switchFunc } from "./junction";
 import { Options, termToString, termToString_katex } from "./characterization";
 
@@ -48,9 +48,7 @@ function App() {
       if (y !== null) {
         y = loose(y);
         lambda = Math.max(xLength, variable_length(y));
-        if (options.checkOnOffF) y = equalize(y, lambda);
       }
-      if (options.checkOnOffF) x = equalize(x, lambda)
 
       const inputStrx = termToString(x, options, selected, lambda);
       const inputStrx_katex = termToString_katex(x, options, selected, lambda);
@@ -97,7 +95,6 @@ function App() {
 
       result = loose(result);
       lambda = Math.max(lambda, variable_length(result));
-      if (options.checkOnOffF) result = equalize(result, lambda);
 
       setOutput(termToString(result, options, selected, lambda));
       setOutput_katex(`出力：$${termToString_katex(result, options, selected, lambda)}$`);
