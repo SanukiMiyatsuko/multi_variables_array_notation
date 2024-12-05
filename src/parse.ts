@@ -48,7 +48,7 @@ export class Scanner {
         this.str = str.replace(/\s/g, ""); // 空白は無視
         this.pos = 0;
         this.headname = selected;
-        if (selected === "C") this.headname = "ψ";
+        if (selected === "C" || selected === "M") this.headname = "ψ";
     }
 
     // 次の文字が期待した文字なら1文字進め、trueを返す。
@@ -59,12 +59,9 @@ export class Scanner {
         return true;
     }
 
-    consumeStrHead(head: string): boolean {
+    consumeStrHead(): boolean {
         const ch = this.str[this.pos];
-        let op1 = head;
-        if (head === "C" || head === "M") op1 = "ψ"
-        const op2 = headNameReplace(op1);
-        if (ch !== "ψ" && ch !== "p" && ch !== op1 && ch !== op2) return false;
+        if (ch !== "ψ" && ch !== "p" && ch !== this.headname && ch !== headNameReplace(this.headname)) return false;
         this.pos += 1;
         return true;
     }
@@ -141,7 +138,7 @@ export class Scanner {
             return IOTA;
         } else {
             const argarr: T[] = [];
-            if (!this.consumeStrHead(this.headname)) {
+            if (!this.consumeStrHead()) {
                 if (this.consume("(")) {
                     const term = this.parse_term();
                     argarr.push(term);
