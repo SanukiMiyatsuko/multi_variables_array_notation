@@ -35,6 +35,9 @@ function App() {
   });
 
   const compute = (operation: Operation) => {
+    setPrintInput_katex("");
+    setOutput_katex("");
+    setPrintInput("");
     setOutput("");
     setOutputError("");
     try {
