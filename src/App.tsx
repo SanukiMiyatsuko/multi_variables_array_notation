@@ -159,12 +159,11 @@ function App() {
       <header>多変数配列表記計算機</header>
       <main>
         <p className="rdm">
-          入力はψ(a_n,a_&#123;n-1&#125;,...,a_3,a_2,a_1),
-          ψ_&#123;a_n&#125;(a_&#123;n-1&#125;,...,a_3,a_2,a_1)の形式で行ってください。<br />
+          入力は、任意の0 &lt; nに対して、ψ(a_n,a_&#123;n-1&#125;,...,a_2,a_1,a_0), ψ_&#123;a_n&#125;(a_a_&#123;n-1&#125;,...,a_2,a_1,a_0)の形式で行ってください。<br />
           変数の個数はばらばらでも大丈夫です。<br />
           {selected !== "ψ" && selected !== "C" && selected !== "M" && (<>ψは{selected}としても大丈夫です。<br /></>)}
           _, &#123;, &#125;は省略可能です。<br />
-          略記として、1 := ψ(0,0,...,0,0,0), n := 1 + 1 + ...(n個の1)... + 1, ω:= ψ(0,0,...,0,0,1), Ω := ψ(0,0,...,0,1,0), I :=ψ(0,0,...,1,0,0)が使用可能。<br />
+          略記として、1 := ψ(0), n := 1 + 1 + ...(n個の1)... + 1, ω:= ψ(1), Ω := ψ(1,0), I :=ψ(1,0,0)が使用可能。<br />
           また、ψは"p"で、{selected !== "ψ" && selected !== "C" && selected !== "M" && (<>または{selected}は"{headNameReplace(selected)}"で、</>)}ωはwで、ΩはWで代用可能です。
         </p>
         A:
@@ -223,15 +222,15 @@ function App() {
           <ul>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffo} onChange={() => handleCheckboxChange("checkOnOffo")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(0,0,...,0,0,1)をωで出力
+              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(1)をωで出力
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffO} onChange={() => handleCheckboxChange("checkOnOffO")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(0,0,...,0,1,0)をΩで出力
+              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(1,0)をΩで出力
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffI} onChange={() => handleCheckboxChange("checkOnOffI")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(0,0,...,1,0,0)をIで出力
+              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(1,0,0)をIで出力
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffF} onChange={() => handleCheckboxChange("checkOnOffF")}/>
