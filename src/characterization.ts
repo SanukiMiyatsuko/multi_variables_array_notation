@@ -128,10 +128,8 @@ function abbrviate(str: string, options: Options, strHead: string, lambda: numbe
     return str;
 }
 
-export function termToString(t: T, options: Options, strHead: string, lambda: number): string {
-    let headname = strHead;
-    if (strHead === "C" || strHead === "M") headname = "ψ";
-    return abbrviate(term_to_string(t, options, headname, lambda), options, headname, lambda);
+export function termToString(t: T, options: Options, head: string, lambda: number): string {
+    return abbrviate(term_to_string(t, options, head, lambda), options, head, lambda);
 }
 
 // オブジェクトから文字列へ
@@ -162,8 +160,8 @@ function term_to_string_katex(t: T, options: Options, strHead: string, lambda: n
     }
 }
 
-function to_TeX(str: string, options: Options, selected: string): string {
-    if (options.checkOnOffp || selected === "ψ" || selected === "C" || selected === "M") {
+function to_TeX(str: string, options: Options, head: string): string {
+    if (options.checkOnOffp || head === "ψ") {
         str = str.replace(RegExp("ψ", "g"), "\\psi");
     }
     str = str.replace(/ω/g, "\\omega");
@@ -171,8 +169,6 @@ function to_TeX(str: string, options: Options, selected: string): string {
     return str;
 }
 
-export function termToString_katex(t: T, options: Options, strHead: string, lambda: number): string {
-    let headname = strHead;
-    if (strHead === "C" || strHead === "M") headname = "ψ";
-    return to_TeX(abbrviate(term_to_string_katex(t, options, headname, lambda), options, headname, lambda), options, strHead);
+export function termToString_katex(t: T, options: Options, head: string, lambda: number): string {
+    return to_TeX(abbrviate(term_to_string_katex(t, options, head, lambda), options, head, lambda), options, head);
 }

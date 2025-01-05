@@ -1,20 +1,5 @@
 import { AT, PT, T, Z, sanitize_plus_term, psi, ONE, OMEGA, LOMEGA, IOTA } from "./intersection";
 
-export const headNameReplace = (headname: string): string => {
-    switch (headname) {
-        case "〇":
-            return "o";
-        case "亜":
-            return "a";
-        case "亞":
-            return "A";
-        case "ψ":
-            return "p";
-        default:
-            throw new Error("不明な操作");
-    }
-}
-
 function from_nat(num: number): PT | AT {
     const numterm: PT[] = [];
     while (num > 0) {
@@ -44,11 +29,10 @@ export class Scanner {
     str: string;
     pos: number;
     headname: string;
-    constructor(str: string, selected: string) {
+    constructor(str: string, head: string) {
         this.str = str.replace(/\s/g, ""); // 空白は無視
         this.pos = 0;
-        this.headname = selected;
-        if (selected === "C" || selected === "M") this.headname = "ψ";
+        this.headname = head;
     }
 
     // 次の文字が期待した文字なら1文字進め、trueを返す。
@@ -61,7 +45,7 @@ export class Scanner {
 
     consumeStrHead(): boolean {
         const ch = this.str[this.pos];
-        if (ch !== "ψ" && ch !== "p" && ch !== this.headname && ch !== headNameReplace(this.headname)) return false;
+        if (/^[<>[\]1234567890ωΩIwW{}_()]$/.test(ch)) return false;
         this.pos += 1;
         return true;
     }

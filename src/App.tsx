@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./App.css";
-import { headNameReplace, Scanner } from "./parse";
+import { Scanner } from "./parse";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -41,9 +41,10 @@ function App() {
     setOutput("");
     setOutputError("");
     try {
-      let x = inputA ? new Scanner(inputA, selected).parse_term() : null;
+      const head = rp();
+      let x = inputA ? new Scanner(inputA, head).parse_term() : null;
       if (x === null) throw Error("Aの入力が必要です");
-      let y = inputB ? new Scanner(inputB, selected).parse_term() : null;
+      let y = inputB ? new Scanner(inputB, head).parse_term() : null;
 
       x = loose(x);
       const xLength = variable_length(x);
@@ -53,15 +54,15 @@ function App() {
         lambda = Math.max(xLength, variable_length(y));
       }
 
-      const inputStrx = termToString(x, options, selected, lambda);
-      const inputStrx_katex = termToString_katex(x, options, selected, lambda);
+      const inputStrx = termToString(x, options, head, lambda);
+      const inputStrx_katex = termToString_katex(x, options, head, lambda);
       let inputStry: string;
       let inputStry_katex: string;
 
       if (operation === "less_than") {
         if (y === null) throw Error("Bの入力が必要です");
-        inputStry = termToString(y, options, selected, lambda);
-        inputStry_katex = termToString_katex(y, options, selected, lambda);
+        inputStry = termToString(y, options, head, lambda);
+        inputStry_katex = termToString_katex(y, options, head, lambda);
         setPrintInput_katex(`入力：$${inputStrx_katex} \\lt ${inputStry_katex}$`);
         setOutput_katex(`出力：$${less_than(x, y) ? "\\textrm{true}" : "\\textrm{false}"}$`);
         setPrintInput(`${inputStrx} < ${inputStry}`);
@@ -82,8 +83,8 @@ function App() {
         switch (operation) {
           case "fund":
             if (y === null) throw Error("Bの入力が必要です");
-            inputStry = termToString(y, options, selected, lambda);
-            inputStry_katex = termToString_katex(y, options, selected, lambda);
+            inputStry = termToString(y, options, head, lambda);
+            inputStry_katex = termToString_katex(y, options, head, lambda);
             setPrintInput(`${inputStrx}[${inputStry}]`);
             setPrintInput_katex(`入力：$${inputStrx_katex}[${inputStry_katex}]$`);
             return func.fund(x, y, reversed);
@@ -99,8 +100,8 @@ function App() {
       result = loose(result);
       lambda = Math.max(lambda, variable_length(result));
 
-      setOutput(termToString(result, options, selected, lambda));
-      setOutput_katex(`出力：$${termToString_katex(result, options, selected, lambda)}$`);
+      setOutput(termToString(result, options, head, lambda));
+      setOutput_katex(`出力：$${termToString_katex(result, options, head, lambda)}$`);
     } catch (error) {
       if (error instanceof Error) setOutputError(error.message);
       else setOutputError("不明なエラー");
@@ -154,6 +155,12 @@ function App() {
     return;
   };
 
+  const rp = () => {
+    if (selected === "あ") return "亜";
+    if (options.checkOnOffp || selected === "C" || selected === "M") return "ψ";
+    return selected;
+  };
+
   return (
     <div className="app">
       <header>多変数配列表記計算機</header>
@@ -161,10 +168,9 @@ function App() {
         <p className="rdm">
           入力は、任意の0 &lt; nに対して、ψ(a_n,a_&#123;n-1&#125;,...,a_2,a_1,a_0), ψ_&#123;a_n&#125;(a_a_&#123;n-1&#125;,...,a_2,a_1,a_0)の形式で行ってください。<br />
           変数の個数はばらばらでも大丈夫です。<br />
-          {selected !== "ψ" && selected !== "C" && selected !== "M" && (<>ψは{selected}としても大丈夫です。<br /></>)}
           _, &#123;, &#125;は省略可能です。<br />
           略記として、1 := ψ(0), n := 1 + 1 + ...(n個の1)... + 1, ω:= ψ(1), Ω := ψ(1,0), I :=ψ(1,0,0)が使用可能。<br />
-          また、ψは"p"で、{selected !== "ψ" && selected !== "C" && selected !== "M" && (<>または{selected}は"{headNameReplace(selected)}"で、</>)}ωはwで、ΩはWで代用可能です。
+          また、ψは他の一文字で、ωはwで、ΩはWで代用可能です。
         </p>
         A:
         <input
@@ -209,6 +215,7 @@ function App() {
           <div className="select is-rounded">
             <select value={selected} onChange={(e) => setSelected(e.target.value)}>
               <option value="〇">多変数〇関数</option>
+              <option value="あ">多変数亜関数 by みずどら</option>
               <option value="亜">多変数亜関数</option>
               <option value="亞">多変数亞関数</option>
               <option value="ψ">くまくま(大嘘)多変数ψ</option>
@@ -222,15 +229,15 @@ function App() {
           <ul>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffo} onChange={() => handleCheckboxChange("checkOnOffo")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(1)をωで出力
+              &nbsp;{rp()}(1)をωで出力
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffO} onChange={() => handleCheckboxChange("checkOnOffO")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(1,0)をΩで出力
+              &nbsp;{rp()}(1,0)をΩで出力
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffI} onChange={() => handleCheckboxChange("checkOnOffI")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(1,0,0)をIで出力
+              &nbsp;{rp()}(1,0,0)をIで出力
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffF} onChange={() => handleCheckboxChange("checkOnOffF")}/>
@@ -238,7 +245,7 @@ function App() {
             </label></li>
             <li><label className="checkbox">
               <input type="checkbox" checked={options.checkOnOffA} onChange={() => handleCheckboxChange("checkOnOffA")}/>
-              &nbsp;{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}(a_n,a_&#123;n-1&#125;,...,a_3,a_2,a_1)を{options.checkOnOffp || selected === "C" || selected === "M" ? "ψ" : selected}_&#123;a_n&#125;(a_n,a_&#123;n-1&#125;,...,a_3,a_2,a_1)で表示
+              &nbsp;{rp()}(a_n,a_&#123;n-1&#125;,...,a_3,a_2,a_1)を{rp()}_&#123;a_n&#125;(a_n,a_&#123;n-1&#125;,...,a_3,a_2,a_1)で表示
             </label></li>
             {options.checkOnOffA && (
               <li><ul><li><label className="checkbox">
@@ -249,7 +256,7 @@ function App() {
             {selected !== "ψ" && selected !== "C" && selected !== "M" && (
               <li><label className="checkbox">
                 <input type="checkbox" checked={options.checkOnOffp} onChange={() => handleCheckboxChange("checkOnOffp")}/>
-                &nbsp;{selected}をψで表示
+                &nbsp;{rp()}をψで表示
               </label></li>
             )}
             <li><label className="checkbox">

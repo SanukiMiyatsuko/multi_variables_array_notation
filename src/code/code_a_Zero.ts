@@ -40,11 +40,9 @@ function fund(s: T, t: T): T {
         const domi_0 = dom(alpha[i_0]);
         if (equal(domi_0, ONE)) {
             if (equal(dom(t), ONE)) {
-                if (i_0 === 0) {
-                    alpha[0] = fund(s.arr[0], Z);
+                alpha[i_0] = fund(s.arr[i_0], Z);
+                if (i_0 === 0)
                     return plus(fund(s, fund(t, Z)), psi(alpha));
-                }
-                alpha[i_0] = fund(alpha[i_0], Z);
                 alpha[i_0-1] = fund(s, fund(t, Z));
                 return psi(alpha);
             }
