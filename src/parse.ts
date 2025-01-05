@@ -28,11 +28,9 @@ function is_numchar(ch: string): boolean {
 export class Scanner {
     str: string;
     pos: number;
-    headname: string;
-    constructor(str: string, head: string) {
+    constructor(str: string) {
         this.str = str.replace(/\s/g, ""); // 空白は無視
         this.pos = 0;
-        this.headname = head;
     }
 
     // 次の文字が期待した文字なら1文字進め、trueを返す。

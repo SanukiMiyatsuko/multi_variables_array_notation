@@ -42,9 +42,9 @@ function App() {
     setOutputError("");
     try {
       const head = rp();
-      let x = inputA ? new Scanner(inputA, head).parse_term() : null;
+      let x = inputA ? new Scanner(inputA).parse_term() : null;
       if (x === null) throw Error("Aの入力が必要です");
-      let y = inputB ? new Scanner(inputB, head).parse_term() : null;
+      let y = inputB ? new Scanner(inputB).parse_term() : null;
 
       x = loose(x);
       const xLength = variable_length(x);
