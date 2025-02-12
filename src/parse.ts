@@ -1,21 +1,5 @@
 import { PT, T, Z, sanitize_plus_term, psi, ONE, OMEGA, LOMEGA, IOTA } from "./intersection";
 
-function is_numchar(ch: string): boolean {
-    // クソが代斉唱
-    return (
-        ch === "0" ||
-        ch === "1" ||
-        ch === "2" ||
-        ch === "3" ||
-        ch === "4" ||
-        ch === "5" ||
-        ch === "6" ||
-        ch === "7" ||
-        ch === "8" ||
-        ch === "9"
-    );
-}
-
 export class Scanner {
     str: string;
     pos: number;
@@ -77,7 +61,7 @@ export class Scanner {
             let list: PT[] = [];
             do {
                 let term: T;
-                if (is_numchar(this.str[this.pos])) term = this.parse_number();
+                if (/^\d$/.test(this.str[this.pos])) term = this.parse_number();
                 else term = this.parse_principal();
                 if (term.type === "zero") throw Error(`0は+で接続できません`);
                 else if (term.type === "plus") list = list.concat(term.add);
