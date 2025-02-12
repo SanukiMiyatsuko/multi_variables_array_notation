@@ -1,15 +1,5 @@
 import { PT, T, Z, sanitize_plus_term, psi, ONE, OMEGA, LOMEGA, IOTA } from "./intersection";
 
-function from_nat(num: number): T {
-    if (num === 0) return Z;
-    const numterm: PT[] = [];
-    while (num > 0) {
-        numterm.push(ONE);
-        num--;
-    }
-    return sanitize_plus_term(numterm);
-}
-
 function is_numchar(ch: string): boolean {
     // クソが代斉唱
     return (
@@ -65,11 +55,17 @@ export class Scanner {
     parse_number(): T {
         let num = parseInt(this.str[this.pos]);
         this.pos += 1;
-        while (is_numchar(this.str[this.pos])) {
+        while (/^\d$/.test(this.str[this.pos])) {
             num = num * 10 + parseInt(this.str[this.pos]);
             this.pos += 1;
         }
-        return from_nat(num);
+        if (num === 0) return Z;
+        const numterm: PT[] = [];
+        while (num > 0) {
+            numterm.push(ONE);
+            num--;
+        }
+        return sanitize_plus_term(numterm);
     }
 
     // 式をパース
