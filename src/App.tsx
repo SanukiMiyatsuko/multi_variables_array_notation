@@ -47,11 +47,10 @@ function App() {
       let y = inputB ? new Scanner(inputB).parse_term() : null;
 
       x = loose(x);
-      const xLength = variable_length(x);
-      let lambda = xLength;
+      let lambda = variable_length(x);
       if (y !== null) {
         y = loose(y);
-        lambda = Math.max(xLength, variable_length(y));
+        lambda = Math.max(lambda, variable_length(y));
       }
 
       const inputStrx = termToString(x, options, head, lambda);
