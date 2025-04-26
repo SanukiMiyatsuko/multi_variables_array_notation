@@ -3,6 +3,17 @@ export type AT = { readonly type: "plus", readonly add: PT[] };
 export type PT = { readonly type: "psi", readonly arr: T[] };
 export type T = ZT | AT | PT;
 
+export function serialize(t: T): string {
+    if (t.type === "zero") return "Z";
+    if (t.type === "plus") return `P[${t.add.map(serialize).join(",")}]`;
+    if (t.type === "psi") return `ψ[${t.arr.map(serialize).join(",")}]`;
+    throw new Error("Unknown type");
+}
+
+export function cacheKey(s: T, t: T): string {
+    return `${serialize(s)}|${serialize(t)}`;
+}
+
 export const Z: ZT = { type: "zero" };
 export const ONE: PT = psi([Z]);
 export const OMEGA: PT = psi([ONE]);
