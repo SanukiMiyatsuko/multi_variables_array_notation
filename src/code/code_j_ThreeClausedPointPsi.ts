@@ -15,7 +15,7 @@ function sm(t: PT, code: string): T | "revOmega" {
     let i = 0;
     while (i < t.arr.length) {
         if (!equal(t.arr[i], Z)) break;
-        i++;
+        i += 1;
     }
     if (i === t.arr.length) throw Error("なんでだよ");
     let i_0 = i;
@@ -24,7 +24,7 @@ function sm(t: PT, code: string): T | "revOmega" {
         i_0 += 1;
     }
     if (i_0 === t.arr.length) return "revOmega";
-    const array = new Array(i_0).fill(Z).concat([...t.arr].slice(i_0, t.arr.length));
+    const array = new Array(i_0).fill(Z).concat([...t.arr].slice(i_0));
     array[i_0] = plus(t.arr[i_0], ONE);
     return psi(array);
 }
@@ -43,6 +43,8 @@ function dom(t: T, code: string): ZT | PT {
         if (i_0 === t.arr.length) return ONE;
         const domi_0 = dom(t.arr[i_0], code);
         const smt = sm(t,code);
+        console.log(t);
+        console.log(smt);
         if (equal(domi_0, ONE)) {
             if (code[i_0] === "M" || code[i_0] === "R") return t;
             return OMEGA;

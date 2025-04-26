@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { less_than, variable_length, T, loose } from "./intersection";
+import { less_than, variable_length, T, loose, equalize } from "./intersection";
 import { Hyouki, switchFunc } from "./junction";
 import { Options, termToString, termToString_katex } from "./characterization";
 
@@ -57,9 +57,11 @@ function App() {
       const inputStrx_katex = termToString_katex(x, options, head, lambda);
       let inputStry: string;
       let inputStry_katex: string;
+      x = equalize(x, lambda);
 
       if (operation === "less_than") {
         if (y === null) throw Error("Bの入力が必要です");
+        y = equalize(y, lambda);
         inputStry = termToString(y, options, head, lambda);
         inputStry_katex = termToString_katex(y, options, head, lambda);
         setPrintInput_katex(`入力：$${inputStrx_katex} \\lt ${inputStry_katex}$`);
@@ -82,6 +84,7 @@ function App() {
         switch (operation) {
           case "fund":
             if (y === null) throw Error("Bの入力が必要です");
+            y = equalize(y, lambda);
             inputStry = termToString(y, options, head, lambda);
             inputStry_katex = termToString_katex(y, options, head, lambda);
             setPrintInput(`${inputStrx}[${inputStry}]`);
